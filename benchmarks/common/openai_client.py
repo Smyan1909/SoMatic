@@ -58,8 +58,8 @@ class OpenAIVisionClient:
         *,
         api_key: str | None = None,
         detail: str = "original",
-        max_output_tokens: int = 512,
-        timeout: float = 60.0,
+        max_output_tokens: int = 4096,
+        timeout: float = 120.0,
     ) -> None:
         try:
             from openai import OpenAI
@@ -90,28 +90,23 @@ class OpenAIVisionClient:
         self.total_output_tokens = 0
 
     def probe(self) -> None:
-        """1-token probe to confirm the model id is callable. Raises a
-        descriptive SystemExit on 404 so the runner aborts before paying
-        for real tasks."""
+        """Verify the configured model id exists in this account.
+
+        Uses `models.retrieve()` rather than a chat completion because
+        reasoning models (GPT-5.x and friends) burn tokens internally before
+        emitting output, so a 1-token probe completion always errors with
+        "max_tokens limit reached" — that's a false negative for model-
+        invalid detection. `models.retrieve()` is a free metadata call
+        that genuinely returns 404 when the id is wrong."""
         try:
-            resp = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": "ping"}],
-                max_tokens=1,
-                temperature=0.0,
-            )
+            self.client.models.retrieve(self.model)
         except Exception as exc:
             raise SystemExit(
-                f"OPENAI_MODEL_INVALID: model '{self.model}' is not callable. "
-                f"Set SOMATIC_BENCH_MODEL to a current model id (e.g. 'gpt-5', "
-                f"'gpt-5-pro', or whatever is current in your account). "
+                f"OPENAI_MODEL_INVALID: model '{self.model}' is not callable in "
+                f"your account. Set SOMATIC_BENCH_MODEL to a current model id "
+                f"(e.g. 'gpt-5', 'gpt-5-pro', 'gpt-4o', or whatever is current). "
                 f"Underlying error: {exc}"
             ) from exc
-        # Sanity: the response includes a `usage` block.
-        if not getattr(resp, "usage", None):
-            raise SystemExit(
-                f"Model '{self.model}' returned no usage block; cannot account for tokens."
-            )
 
     def ask(self, image_b64: str, prompt: str, *, mime: str = "image/png") -> OpenAIResponse:
         """Send one image+text turn and return parsed token totals."""
@@ -147,8 +142,7 @@ class OpenAIVisionClient:
                         {"type": "text", "text": prompt},
                     ],
                 }],
-                max_tokens=self.max_output_tokens,
-                temperature=0.0,
+                max_completion_tokens=self.max_output_tokens,
                 response_format={"type": "json_object"},
             )
 

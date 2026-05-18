@@ -1,18 +1,34 @@
 """ScreenSpot-Pro loader.
 
-HF dataset: `likaixin/ScreenSpot-Pro` (MIT). Each sample has an image, an
-instruction, a bbox in absolute pixel coordinates, and metadata (platform,
-application, group, instruction_style).
+HF dataset: `likaixin/ScreenSpot-Pro` (MIT). The repo is NOT a standard
+`datasets`-library layout; it's raw research data:
 
-We normalise bboxes to [0,1] at load time so the agent layer is dataset-
-agnostic.
+    annotations/<app>_<platform>.json    # one JSON list per application
+    images/<subdir>/<filename>.png       # screenshots
+
+Each annotation entry has:
+    {
+      "img_filename": "excel_mac/screenshot_...png",   # path under images/
+      "bbox": [x1, y1, x2, y2],                        # absolute pixels
+      "instruction": "...",
+      "id": "excel_macos_0",
+      "application": "excel",
+      "platform": "macos",
+      "img_size": [width, height],
+      "ui_type": "...",
+      "group": "Office"
+    }
+
+We download annotations eagerly (small) and images lazily (one per task on
+demand) so `--dry-run` and `--tier subset` don't pull the full ~4 GB.
 """
 from __future__ import annotations
 
 import io
+import json
 import os
-from collections.abc import Iterator
-from typing import Any
+from dataclasses import dataclass, field
+from typing import Any, Mapping
 
 from ..common.sampling import load_or_create_subset
 from ..common.types import GroundingTask
@@ -23,105 +39,123 @@ SUBSET_N = 200
 STRATA = ("platform", "group")
 
 
-def _bbox_to_normalised(
-    bbox: list[float], width: int, height: int
-) -> tuple[float, float, float, float] | None:
-    if bbox is None or len(bbox) != 4:
-        return None
-    x1, y1, x2, y2 = bbox
-    # ScreenSpot-Pro emits absolute pixel coords.
-    return (
-        max(0.0, x1 / width),
-        max(0.0, y1 / height),
-        min(1.0, x2 / width),
-        min(1.0, y2 / height),
-    )
+@dataclass
+class _TaskSource:
+    """Lightweight task descriptor for stratified picking. Materialises into a
+    full GroundingTask (with image bytes) on demand."""
 
+    task_id: str
+    metadata: Mapping[str, str]
+    annotation: dict[str, Any]
+    repo_id: str = field(default=HF_REPO)
 
-def _to_task(sample: dict[str, Any], index: int) -> GroundingTask | None:
-    image = sample.get("image")
-    if image is None:
-        return None
-    if hasattr(image, "convert"):
-        # PIL.Image — convert to RGB PNG bytes for downstream consumers.
-        pil_image = image.convert("RGB")
-        buf = io.BytesIO()
-        pil_image.save(buf, format="PNG")
-        image_bytes = buf.getvalue()
-        width, height = pil_image.size
-    elif isinstance(image, dict) and "bytes" in image:
-        image_bytes = image["bytes"]
+    def materialize(self) -> GroundingTask | None:
+        from huggingface_hub import hf_hub_download
         from PIL import Image as PILImage
 
-        with PILImage.open(io.BytesIO(image_bytes)) as pil_image:
-            width, height = pil_image.size
-    else:
-        return None
+        ann = self.annotation
+        img_filename = ann.get("img_filename")
+        if not img_filename:
+            return None
+        try:
+            local_image = hf_hub_download(
+                repo_id=self.repo_id,
+                filename=f"images/{img_filename}",
+                repo_type="dataset",
+            )
+        except Exception:
+            return None
+        with open(local_image, "rb") as f:
+            image_bytes = f.read()
 
-    instruction = sample.get("instruction") or sample.get("task") or ""
-    if not instruction:
-        return None
+        size = ann.get("img_size")
+        if isinstance(size, (list, tuple)) and len(size) == 2:
+            width, height = int(size[0]), int(size[1])
+        else:
+            with PILImage.open(io.BytesIO(image_bytes)) as img:
+                width, height = img.size
 
-    bbox_raw = (
-        sample.get("bbox")
-        or (sample.get("action_detection") or {}).get("bbox")
-    )
-    if bbox_raw is None:
-        return None
-    bbox_norm = _bbox_to_normalised(list(bbox_raw), width, height)
+        bbox = ann.get("bbox")
+        if not (isinstance(bbox, (list, tuple)) and len(bbox) == 4):
+            return None
+        x1, y1, x2, y2 = bbox
+        bbox_norm = (
+            max(0.0, x1 / width),
+            max(0.0, y1 / height),
+            min(1.0, x2 / width),
+            min(1.0, y2 / height),
+        )
 
-    task_id = (
-        sample.get("id")
-        or sample.get("task_id")
-        or f"screenspot-pro-{index:05d}"
-    )
-
-    metadata = {
-        "platform": str(sample.get("platform") or "<unknown>"),
-        "application": str(sample.get("application") or "<unknown>"),
-        "group": str(sample.get("group") or "<unknown>"),
-        "instruction_style": str(sample.get("instruction_style") or "<unknown>"),
-    }
-
-    return GroundingTask(
-        task_id=str(task_id),
-        image_bytes=image_bytes,
-        image_size=(width, height),
-        instruction=str(instruction),
-        ground_truth_bbox=bbox_norm,
-        metadata=metadata,
-    )
+        return GroundingTask(
+            task_id=self.task_id,
+            image_bytes=image_bytes,
+            image_size=(width, height),
+            instruction=str(ann.get("instruction") or ""),
+            ground_truth_bbox=bbox_norm,
+            metadata=dict(self.metadata),
+        )
 
 
-def _iter_samples() -> Iterator[dict[str, Any]]:
-    try:
-        from datasets import load_dataset
-    except ImportError as exc:
-        raise SystemExit(
-            "benchmarks/requirements.txt must be installed (datasets). "
-            "Run: pip install -r benchmarks/requirements.txt"
-        ) from exc
+def _list_annotation_files(repo_id: str) -> list[str]:
+    from huggingface_hub import HfApi
 
-    # ScreenSpot-Pro typically lives in a single `test` split.
-    ds = load_dataset(HF_REPO)
-    split = "test" if "test" in ds else next(iter(ds))
-    yield from ds[split]
+    api = HfApi()
+    files = api.list_repo_files(repo_id=repo_id, repo_type="dataset")
+    return [f for f in files if f.startswith("annotations/") and f.endswith(".json")]
+
+
+def _iter_task_sources(repo_id: str = HF_REPO):
+    from huggingface_hub import hf_hub_download
+
+    for ann_path in _list_annotation_files(repo_id):
+        local_ann = hf_hub_download(
+            repo_id=repo_id,
+            filename=ann_path,
+            repo_type="dataset",
+        )
+        with open(local_ann, "r", encoding="utf-8") as f:
+            entries = json.load(f)
+        if not isinstance(entries, list):
+            continue
+        for i, entry in enumerate(entries):
+            if not isinstance(entry, dict):
+                continue
+            task_id = str(entry.get("id") or f"{ann_path}::{i}")
+            metadata = {
+                "platform": str(entry.get("platform") or "<unknown>"),
+                "application": str(entry.get("application") or "<unknown>"),
+                "group": str(entry.get("group") or "<unknown>"),
+                "ui_type": str(entry.get("ui_type") or "<unknown>"),
+            }
+            yield _TaskSource(
+                task_id=task_id,
+                metadata=metadata,
+                annotation=entry,
+                repo_id=repo_id,
+            )
 
 
 def load_tasks(tier: str) -> list[GroundingTask]:
-    all_tasks: list[GroundingTask] = []
-    for i, sample in enumerate(_iter_samples()):
-        task = _to_task(sample, i)
-        if task is not None:
-            all_tasks.append(task)
+    sources = list(_iter_task_sources())
+    if not sources:
+        return []
 
     if tier == "subset":
-        return load_or_create_subset(
+        picked = load_or_create_subset(
             name=DATASET_NAME,
-            all_tasks=all_tasks,
+            all_tasks=sources,  # duck-typed: stratified_subset only reads .task_id / .metadata
             n=SUBSET_N,
             strata_keys=STRATA,
         )
-    if tier == "full":
-        return all_tasks
-    raise ValueError(f"unknown tier: {tier!r}")
+    elif tier == "full":
+        picked = sources
+    else:
+        raise ValueError(f"unknown tier: {tier!r}")
+
+    tasks: list[GroundingTask] = []
+    for src in picked:
+        # mypy: _TaskSource and GroundingTask share only the duck-typed surface used by the picker.
+        materialized = src.materialize() if isinstance(src, _TaskSource) else None
+        if materialized is not None:
+            tasks.append(materialized)
+    return tasks

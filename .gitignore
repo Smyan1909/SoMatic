@@ -26,6 +26,15 @@ tmp-somatic-*/
 benchmarks/results/raw/
 benchmarks/results/*.tmp
 
+# Conversion outputs from tools/convert_yolo_to_onnx.py are AGPL-3.0
+# (inherited from upstream YOLO). They must never enter the SoMatic repo;
+# users keep them locally and point SOMATIC_YOLO_ONNX_PATH at them.
+tools/*.onnx
+tools/*.pt
+tools/*.sha256
+tools/build/
+tools/_convert/
+
 # Editors / OS
 .idea/
 .vscode/

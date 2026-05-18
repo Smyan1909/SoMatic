@@ -91,10 +91,17 @@ def _acc(records: Iterable[dict[str, Any]]) -> tuple[int, int, float]:
 
 
 def _venusbench_headline_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Exclude refusal_spatial from the headline VenusBench-GD score."""
+    """Exclude the refusal task type from the headline VenusBench-GD score.
+
+    The actual filename in the HF repo is `refusal_grounding.json` (not
+    `refusal_spatial.json` as some literature calls it); we strip that
+    sub-task from the headline average so a raw VLM that always emits a
+    coordinate isn't asymmetrically punished. The refusal sub-score is
+    still shown in the per-task-type breakdown.
+    """
     return [
         r for r in records
-        if r.get("metadata", {}).get("task_type") != "refusal_spatial"
+        if r.get("metadata", {}).get("task_type") != "refusal_grounding"
     ]
 
 

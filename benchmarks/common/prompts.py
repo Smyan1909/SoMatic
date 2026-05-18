@@ -6,20 +6,42 @@ client so the same prompt + image yields the same answer across reruns.
 """
 
 MARKS_PROMPT = """\
-You are shown a screenshot with numbered red boxes drawn over UI elements
-detected by a separate vision model. Each box has an integer id.
+You are shown a screenshot annotated with numbered red boxes drawn over UI
+elements detected by a separate vision model. Each box has an integer id.
 
-Your task: identify which numbered box best matches the following instruction.
-Respond ONLY with a JSON object: {{"mark_id": <int>}}.
+Your task: identify the click location that best satisfies the instruction.
+You have THREE possible actions, in order of preference:
 
-If no numbered box matches, respond {{"mark_id": null}}. Do not invent ids
-that aren't in the list below.
+1. CLICK a numbered box, when that box exactly contains the target element:
+       {{"action": "click", "mark_id": <int>}}
 
-Available marks (id -> bbox in pixels [x1, y1, x2, y2], confidence):
+2. CLICK_NEAR a numbered box, when a box is adjacent to the target but doesn't
+   exactly contain it (e.g. the target is right next to or directly above/below
+   a detected element). dx is positive to the right, dy is positive downward,
+   both in original-image pixels. The final click is at (mark.center.x + dx,
+   mark.center.y + dy):
+       {{"action": "click_near", "mark_id": <int>, "dx": <int>, "dy": <int>}}
+
+3. CLICK_XY at raw coordinates, when no nearby box helps (the vision model
+   missed this region entirely). Coordinates are in the original image's pixel
+   space; (0, 0) is the top-left:
+       {{"action": "click_xy", "x": <int>, "y": <int>}}
+
+If the target is genuinely not present, respond {{"action": "refuse"}}.
+
+Prefer (1) when possible; fall back to (2) for offsets within ~200 px of a
+detected mark; use (3) only when YOLO clearly missed the region. Do NOT
+invent mark ids that aren't in the list below.
+
+Image dimensions: {width} x {height} pixels.
+
+Available marks (id -> bbox [x1, y1, x2, y2], confidence):
 {marks}
 
 Instruction:
 {instruction}
+
+Respond with ONLY one of the four JSON objects above. No prose.
 """
 
 

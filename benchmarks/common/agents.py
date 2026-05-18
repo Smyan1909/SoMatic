@@ -58,7 +58,74 @@ def _coerce_point(payload: dict) -> tuple[int, int] | None:
         return None
 
 
+def _resolve_marks_action(payload: dict, marks: list[dict]) -> tuple[int, int] | None:
+    """Map the GPT response (one of click / click_near / click_xy / refuse)
+    to a concrete pixel point. Mirrors SoMatic's CLI: `click <id>`,
+    `click_near <id> --dx --dy`, and `click x,y` are first-class actions."""
+    action = (payload.get("action") or "").lower()
+
+    if action == "refuse":
+        return None
+
+    if action == "click":
+        mid = payload.get("mark_id")
+        try:
+            mid = int(mid) if mid is not None else None
+        except (TypeError, ValueError):
+            return None
+        mark = next((m for m in marks if m["id"] == mid), None)
+        if mark is None:
+            return None
+        cx, cy = mark["center"]
+        return (int(cx), int(cy))
+
+    if action == "click_near":
+        mid = payload.get("mark_id")
+        try:
+            mid = int(mid) if mid is not None else None
+            dx = int(payload.get("dx", 0) or 0)
+            dy = int(payload.get("dy", 0) or 0)
+        except (TypeError, ValueError):
+            return None
+        mark = next((m for m in marks if m["id"] == mid), None)
+        if mark is None:
+            return None
+        cx, cy = mark["center"]
+        return (int(cx + dx), int(cy + dy))
+
+    if action == "click_xy":
+        x = payload.get("x")
+        y = payload.get("y")
+        if x is None or y is None:
+            return None
+        try:
+            return (int(x), int(y))
+        except (TypeError, ValueError):
+            return None
+
+    # Backwards-compat: an older single-action prompt expected {"mark_id": N}.
+    # Honour that shape too in case the model emits it.
+    if "mark_id" in payload:
+        try:
+            mid = int(payload["mark_id"]) if payload["mark_id"] is not None else None
+        except (TypeError, ValueError):
+            return None
+        if mid is None:
+            return None
+        mark = next((m for m in marks if m["id"] == mid), None)
+        if mark is None:
+            return None
+        cx, cy = mark["center"]
+        return (int(cx), int(cy))
+
+    return None
+
+
 class SoMaticMarksAgent:
+    """Full SoMatic SKILL: the agent sees the annotated image + marks list and
+    can respond with one of three actions, matching the SKILL.md operating
+    loop: `click <id>`, `click_near <id> --dx --dy`, or `click x,y`."""
+
     name = "marks"
     needs_somatic = True
 
@@ -70,20 +137,16 @@ class SoMaticMarksAgent:
         t0 = time.perf_counter()
         som = self.somatic.infer(task.image_bytes)
         marks_text = _format_marks(som)
-        prompt = MARKS_PROMPT.format(instruction=task.instruction, marks=marks_text)
+        width, height = task.image_size
+        prompt = MARKS_PROMPT.format(
+            instruction=task.instruction,
+            marks=marks_text,
+            width=width,
+            height=height,
+        )
         resp = self.openai.ask(image_b64=som.annotated_image_b64, prompt=prompt)
         payload = _parse_json(resp.text)
-        mid_raw = payload.get("mark_id")
-        try:
-            mid = int(mid_raw) if mid_raw is not None else None
-        except (TypeError, ValueError):
-            mid = None
-
-        chosen = next((m for m in som.marks if m["id"] == mid), None) if mid is not None else None
-        point: tuple[int, int] | None = None
-        if chosen is not None:
-            cx, cy = chosen["center"]
-            point = (int(cx), int(cy))
+        point = _resolve_marks_action(payload, som.marks)
         return Prediction(
             point=point,
             raw_response=resp.text,

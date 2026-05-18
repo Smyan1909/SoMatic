@@ -210,10 +210,11 @@ def test_load_or_create_subset_roundtrips(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def test_marks_agent_returns_centre_of_chosen_mark():
-    fake_openai = FakeVisionClient(lambda img, prompt: json.dumps({"mark_id": 1}))
-    fake_somatic = FakeSomaticClient()
-    agent = SoMaticMarksAgent(fake_openai, fake_somatic)
+def test_marks_agent_click_action_returns_centre_of_chosen_mark():
+    fake_openai = FakeVisionClient(
+        lambda img, prompt: json.dumps({"action": "click", "mark_id": 1})
+    )
+    agent = SoMaticMarksAgent(fake_openai, FakeSomaticClient())
 
     pred = agent.predict(_make_task("t1"))
 
@@ -222,8 +223,33 @@ def test_marks_agent_returns_centre_of_chosen_mark():
     assert pred.output_tokens == 5
 
 
-def test_marks_agent_handles_refusal():
-    fake_openai = FakeVisionClient(lambda img, prompt: json.dumps({"mark_id": None}))
+def test_marks_agent_click_near_applies_offset():
+    fake_openai = FakeVisionClient(
+        lambda img, prompt: json.dumps(
+            {"action": "click_near", "mark_id": 1, "dx": 100, "dy": -20}
+        )
+    )
+    agent = SoMaticMarksAgent(fake_openai, FakeSomaticClient())
+
+    pred = agent.predict(_make_task("t1b"))
+
+    # Mark 1's centre is (50, 50); offset by (+100, -20) → (150, 30).
+    assert pred.point == (150, 30)
+
+
+def test_marks_agent_click_xy_returns_raw_coords():
+    fake_openai = FakeVisionClient(
+        lambda img, prompt: json.dumps({"action": "click_xy", "x": 320, "y": 240})
+    )
+    agent = SoMaticMarksAgent(fake_openai, FakeSomaticClient())
+
+    pred = agent.predict(_make_task("t1c"))
+
+    assert pred.point == (320, 240)
+
+
+def test_marks_agent_refuse_returns_none():
+    fake_openai = FakeVisionClient(lambda img, prompt: json.dumps({"action": "refuse"}))
     agent = SoMaticMarksAgent(fake_openai, FakeSomaticClient())
 
     pred = agent.predict(_make_task("t2"))
@@ -232,12 +258,26 @@ def test_marks_agent_handles_refusal():
 
 
 def test_marks_agent_invalid_id_returns_none_point():
-    fake_openai = FakeVisionClient(lambda img, prompt: json.dumps({"mark_id": 99}))
+    fake_openai = FakeVisionClient(
+        lambda img, prompt: json.dumps({"action": "click", "mark_id": 99})
+    )
     agent = SoMaticMarksAgent(fake_openai, FakeSomaticClient())
 
     pred = agent.predict(_make_task("t3"))
 
     assert pred.point is None
+
+
+def test_marks_agent_legacy_mark_id_shape_still_works():
+    """Older prompt expected `{"mark_id": N}`; the resolver still accepts it
+    for forward-compat in case the model emits the old shape."""
+    fake_openai = FakeVisionClient(lambda img, prompt: json.dumps({"mark_id": 2}))
+    agent = SoMaticMarksAgent(fake_openai, FakeSomaticClient())
+
+    pred = agent.predict(_make_task("t4"))
+
+    # Mark 2's centre per FakeSomaticClient is (150, 150).
+    assert pred.point == (150, 150)
 
 
 def test_coords_agent_returns_xy():

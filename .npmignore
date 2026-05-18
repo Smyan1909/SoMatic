@@ -4,6 +4,9 @@
 # in case the `files` allowlist in package.json ever drifts.
 tools/
 
+# Benchmark harness is dev-time tooling; never shipped.
+benchmarks/
+
 # Standard ignores.
 **/__pycache__/
 *.py[cod]

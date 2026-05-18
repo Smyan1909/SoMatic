@@ -62,7 +62,8 @@ packages = ["src/somatic"]
 
 [tool.hatch.build.targets.sdist]
 # Source distribution is MIT-only. `tools/` is excluded so PyPI sdists never
-# carry the AGPL-licensed conversion tool. Same for tests/scripts.
+# carry the AGPL-licensed conversion tool. `benchmarks/` is excluded because
+# it's dev-time tooling. Same for tests/scripts.
 include = [
   "src/somatic/",
   "bin/",
@@ -73,6 +74,7 @@ include = [
 ]
 exclude = [
   "tools/",
+  "benchmarks/",
   "tests/",
   "scripts/",
   "**/__pycache__/",

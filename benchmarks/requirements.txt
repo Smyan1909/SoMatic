@@ -1,0 +1,10 @@
+# Dev-time tooling for the benchmark harness.
+# Not part of the SoMatic distribution; intentionally kept out of pyproject's
+# optional-dependencies so a `pip install -e .[vision]` install stays lean.
+openai>=1.50
+datasets>=2.20
+Pillow>=10
+pandas>=2.2
+matplotlib>=3.9
+tenacity>=8.2
+tqdm>=4.66

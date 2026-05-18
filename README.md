@@ -122,6 +122,12 @@ somatic headless stop
 
 See [docs/headless.md](docs/headless.md) for prerequisites and the full walkthrough.
 
+## Benchmarks
+
+<!-- benchmarks-begin -->
+SoMatic is evaluated on ScreenSpot-Pro and VenusBench-GD against two baselines (raw GPT; SoMatic-as-hints-only + GPT). Full numbers, per-platform breakdowns, and methodology in [benchmarks/results/RESULTS.md](benchmarks/results/RESULTS.md). The harness lives in [`benchmarks/`](benchmarks/).
+<!-- benchmarks-end -->
+
 ## Licensing
 
 SoMatic follows the **FFmpeg licensing strategy**: a strictly MIT-licensed core, with AGPL-licensed conversion tooling segregated into a separate directory so it never touches the published artifacts.

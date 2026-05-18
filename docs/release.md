@@ -10,7 +10,21 @@ node bin/somatic.js wait 0
 npm pack --dry-run
 ```
 
-`tests/test_license_boundary.py` must be green — those tests guarantee that no AGPL-licensed code (e.g. `ultralytics`) is reachable from `src/somatic/`.
+`tests/test_license_boundary.py` and `tests/test_benchmarks_excluded_from_distribution.py` must both be green — they guarantee that no AGPL-licensed code (`ultralytics`) is reachable from `src/somatic/`, and that `benchmarks/` and `tools/` are excluded from npm + PyPI artifacts.
+
+## 1b. Benchmarks (before tagging a release)
+
+```sh
+pip install -r benchmarks/requirements.txt
+export OPENAI_API_KEY=sk-...
+export SOMATIC_YOLO_ONNX_PATH=/path/to/icon-detect.onnx     # or SOMATIC_YOLO_ONNX_REPO
+python -m benchmarks.run --dataset all --arm all --tier subset --budget 30   # dev iteration
+python -m benchmarks.run --dataset all --arm all --tier full --budget 350    # final numbers
+python -m benchmarks.aggregate
+python -m benchmarks.publish --commit
+```
+
+Confirm `benchmarks/results/RESULTS.md` and the README's Benchmarks headline reflect the latest run before tagging.
 
 ## 2. Verify tarball contents
 

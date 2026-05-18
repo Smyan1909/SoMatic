@@ -22,6 +22,10 @@ tmp-fixture.png
 tmp-somatic-*/
 *.somatic.tmp
 
+# Benchmark raw artifacts (RESULTS.md and figures/ ARE committed; raw/ is not)
+benchmarks/results/raw/
+benchmarks/results/*.tmp
+
 # Editors / OS
 .idea/
 .vscode/

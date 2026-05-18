@@ -1,0 +1,27 @@
+{
+  "name": "@somatic/cli",
+  "version": "0.1.0",
+  "description": "Agent-first CLI for native UI automation with Set-of-Marks screenshots.",
+  "license": "MIT",
+  "bin": {
+    "somatic": "bin/somatic.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js",
+    "test": "python -m pytest",
+    "doctor": "node bin/somatic.js doctor",
+    "pack:check": "npm pack --dry-run"
+  },
+  "files": [
+    "bin/",
+    "scripts/",
+    "src/somatic/",
+    "docs/",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

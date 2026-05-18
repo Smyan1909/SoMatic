@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Build / dist
+dist/
+build/
+
+# Virtualenvs
+.venv/
+.env
+
+# Node
+node_modules/
+
+# SoMatic-specific
+tmp-output/
+tmp-fixture.png
+tmp-somatic-*/
+*.somatic.tmp
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Per-user Claude Code config (machine-local permission allowlists, etc.)
+.claude/

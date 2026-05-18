@@ -1,0 +1,9 @@
+# Installing these dependencies activates AGPL-3.0 obligations on derivative
+# work (notably the ONNX file produced by convert_yolo_to_onnx.py).
+# See LICENSE.AGPL.
+#
+# This file is intentionally separate from SoMatic's pyproject.toml so that
+# `pip install -e .` and `pip install -e .[vision]` never pull in AGPL deps.
+ultralytics>=8.2
+torch>=2.2
+huggingface-hub>=0.23

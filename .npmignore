@@ -1,0 +1,16 @@
+# SoMatic's npm tarball must remain MIT-only. The `tools/` directory uses
+# AGPL-licensed code (ultralytics) and is deliberately kept out of every
+# published artifact (npm + PyPI sdist + wheel). This file is defense-in-depth
+# in case the `files` allowlist in package.json ever drifts.
+tools/
+
+# Standard ignores.
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+tmp-output/
+tmp-fixture.png
+.git/
+.github/
+tests/

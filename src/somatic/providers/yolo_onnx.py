@@ -31,7 +31,12 @@ HF_ONNX_REPO_ID = os.environ.get("SOMATIC_YOLO_ONNX_REPO", "")
 HF_ONNX_FILENAME = os.environ.get("SOMATIC_YOLO_ONNX_FILENAME", "icon-detect.onnx")
 
 INPUT_SIZE = int(os.environ.get("SOMATIC_YOLO_INPUT_SIZE", "640"))
-CONF_THRESH = float(os.environ.get("SOMATIC_YOLO_CONF", "0.10"))
+# Confidence threshold. 0.05 matches OmniParser's upstream default and gives
+# ~63% coverage on ScreenSpot-Pro vs. ~47% at 0.10 (measured 2026-05-XX on
+# the icon_detect ONNX). Lower thresholds (0.02–0.03) push coverage higher
+# but flood dense UIs with marks the VLM has to disambiguate without text
+# captions. Tunable via env var if you want to experiment.
+CONF_THRESH = float(os.environ.get("SOMATIC_YOLO_CONF", "0.05"))
 IOU_THRESH = float(os.environ.get("SOMATIC_YOLO_IOU", "0.45"))
 LETTERBOX_FILL = (114, 114, 114)
 

@@ -39,23 +39,54 @@ def capture_raw(*, output_dir: Path | None = None, input_path: Path | None = Non
     return {"raw_path": str(raw_path), "width": width, "height": height}
 
 
+def _scaled_font(height: int) -> ImageFont.ImageFont:
+    """Pick a font size that's actually readable on any screenshot resolution.
+
+    `ImageFont.load_default()` (no size kwarg) returns a ~10 px bitmap font.
+    That's invisible on a 4K screenshot — about 0.5% of image height — and
+    breaks Set-of-Marks for any downstream VLM that needs to read mark ids
+    off the overlay. We target ~2% of image height, clamped to [16, 56] so
+    we don't get absurd labels on tiny test images or microscopic ones on
+    8K monitors. Pillow >= 10.1 supports `load_default(size=N)` which
+    returns a properly scaled DejaVu Sans; older Pillows fall back to the
+    bitmap font (better than nothing).
+    """
+    size = max(16, min(56, height // 50 * 2))
+    try:
+        return ImageFont.load_default(size=size)
+    except TypeError:  # pragma: no cover - Pillow < 10.1
+        return ImageFont.load_default()
+
+
 def annotate_image(raw_path: Path, marks: list[dict[str, Any]], *, output_dir: Path | None = None) -> str:
     target_dir = output_dir or raw_path.parent
     annotated_path = target_dir / raw_path.name.replace("screenshot-", "annotated-")
     with Image.open(raw_path).convert("RGB") as image:
+        width, height = image.size
         draw = ImageDraw.Draw(image)
-        font = ImageFont.load_default()
+        font = _scaled_font(height)
+        # Outline + label padding also scale with resolution so they stay
+        # visually present on 4K + screens without being obnoxious on small ones.
+        outline_width = max(2, height // 500)
+        pad = max(3, height // 400)
         for mark in marks:
             x1, y1, x2, y2 = [int(v) for v in mark["bbox"]]
             label = str(mark["id"])
-            draw.rectangle((x1, y1, x2, y2), outline=(255, 40, 40), width=3)
+            draw.rectangle((x1, y1, x2, y2), outline=(255, 40, 40), width=outline_width)
             text_bbox = draw.textbbox((x1, y1), label, font=font)
-            pad = 3
+            tw = text_bbox[2] - text_bbox[0]
+            th = text_bbox[3] - text_bbox[1]
+            # Prefer placing the label ABOVE the bbox so it doesn't obscure the
+            # element. Fall back to inside (top-left) if there's no headroom.
+            label_y = y1 - th - 2 * pad
+            if label_y < 0:
+                label_y = y1
+            label_x = max(0, x1)
             draw.rectangle(
-                (text_bbox[0] - pad, text_bbox[1] - pad, text_bbox[2] + pad, text_bbox[3] + pad),
+                (label_x - pad, label_y - pad, label_x + tw + pad, label_y + th + pad),
                 fill=(255, 40, 40),
             )
-            draw.text((x1, y1), label, fill=(255, 255, 255), font=font)
+            draw.text((label_x, label_y), label, fill=(255, 255, 255), font=font)
         image.save(annotated_path)
     return str(annotated_path)
 

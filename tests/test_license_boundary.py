@@ -11,7 +11,7 @@ by any module under `src/somatic/`.
 from __future__ import annotations
 
 import importlib
-import inspect
+import pathlib
 import re
 import sys
 
@@ -46,21 +46,29 @@ def test_importing_somatic_does_not_pull_in_ultralytics():
 
 def test_no_actual_ultralytics_import_statements_under_src_somatic():
     """The substring 'ultralytics' is OK in docstrings/comments (we point
-    users at tools/ explicitly), but ACTUAL `import` statements are not."""
-    from somatic.providers import yolo_onnx
-    from somatic import cli, vision_daemon, screenshot, automation, headless, mcp_server
+    users at tools/ explicitly), but ACTUAL `import` statements are not.
 
+    Scans source files directly rather than importing them. That way the
+    test runs even on installations that don't have every optional extra
+    (e.g. CI without `[mcp]` or `[vision]`) and still catches a static
+    boundary violation.
+    """
     pattern = re.compile(r"^\s*(import\s+ultralytics|from\s+ultralytics)", re.MULTILINE)
+    src_dir = pathlib.Path(__file__).resolve().parent.parent / "src" / "somatic"
+    assert src_dir.is_dir(), f"expected src directory at {src_dir}"
 
-    modules_to_check = [yolo_onnx, cli, vision_daemon, screenshot, automation, headless, mcp_server]
-    for mod in modules_to_check:
-        source = inspect.getsource(mod)
-        match = pattern.search(source)
-        assert match is None, (
-            f"AGPL boundary violation in {mod.__name__}: found "
-            f"{match.group(0).strip()!r}. ultralytics imports must live in "
-            "tools/ only."
-        )
+    violations: list[str] = []
+    for py in src_dir.rglob("*.py"):
+        text = py.read_text(encoding="utf-8")
+        match = pattern.search(text)
+        if match is not None:
+            rel = py.relative_to(src_dir.parent.parent)
+            violations.append(f"{rel}: {match.group(0).strip()!r}")
+
+    assert not violations, (
+        "AGPL boundary violation under src/somatic/. ultralytics imports must "
+        "live in tools/ only. Offenders:\n  " + "\n  ".join(violations)
+    )
 
 
 def test_yolo_onnx_does_not_reference_convert_function():

@@ -3,7 +3,11 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "somatic"
+# Distribution name on PyPI. The `somatic` distribution name is taken by an
+# unrelated documentation framework; we publish as `somatic-cli` (matching
+# the npm package `@somatic/cli`). The import name is still `somatic`
+# (i.e., `from somatic.cli import main`).
+name = "somatic-cli"
 version = "0.1.0"
 description = "Agent-first CLI for native UI automation with Set-of-Marks screenshots."
 readme = "README.md"

@@ -22,8 +22,12 @@ The `[vision]` extra pulls `onnxruntime`, `numpy`, and `huggingface-hub`. Import
 For Python-only installs (no npm shim):
 
 ```sh
+# From the repo:
 pip install -e .[vision]                       # runtime only (~30 MB)
 pip install -e .[vision,mcp]                   # add the MCP server (Claude Code, Cursor, Continue)
+
+# From PyPI (once published — the distribution is `somatic-cli`, the import name is `somatic`):
+pip install 'somatic-cli[vision,mcp]'
 ```
 
 See [docs/mcp.md](docs/mcp.md) for Claude Code wiring.

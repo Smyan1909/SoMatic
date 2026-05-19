@@ -3,10 +3,32 @@
   "version": "0.1.0",
   "description": "Agent-first CLI for native UI automation with Set-of-Marks screenshots.",
   "license": "MIT",
+  "author": "SoMatic contributors",
+  "homepage": "https://github.com/Smyan1909/SoMatic#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Smyan1909/SoMatic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Smyan1909/SoMatic/issues"
+  },
+  "keywords": [
+    "automation",
+    "computer-use",
+    "agents",
+    "cli",
+    "set-of-marks",
+    "pyautogui",
+    "desktop-automation",
+    "mcp",
+    "gui-grounding",
+    "yolo"
+  ],
   "bin": {
     "somatic": "bin/somatic.js"
   },
   "scripts": {
+    "prepack": "python -c \"import shutil, pathlib; [shutil.rmtree(p) for p in pathlib.Path('src').rglob('__pycache__')]\"",
     "postinstall": "node scripts/postinstall.js",
     "test": "python -m pytest",
     "doctor": "node bin/somatic.js doctor",
@@ -23,5 +45,8 @@
   ],
   "engines": {
     "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

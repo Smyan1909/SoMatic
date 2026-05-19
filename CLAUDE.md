@@ -123,7 +123,7 @@ Error codes are defined as `SomaticError` instances raised through `jsonio.fail(
 
 ## Configuration knobs (env vars)
 
-- `SOMATIC_YOLO_CONF` — detection confidence threshold (default `0.10`)
+- `SOMATIC_YOLO_CONF` — detection confidence threshold (default `0.05`)
 - `SOMATIC_YOLO_IOU` — NMS IoU threshold (default `0.45`)
 - `SOMATIC_YOLO_INPUT_SIZE` — letterbox size (default `640`)
 - `SOMATIC_YOLO_THREADS` — onnxruntime intra-op thread count

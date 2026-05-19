@@ -14,7 +14,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "SoMatic contributors" }]
-keywords = ["automation", "pyautogui", "computer-use", "cli", "agents"]
+keywords = ["automation", "pyautogui", "computer-use", "cli", "agents", "set-of-marks", "desktop-automation", "gui-grounding", "mcp"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -49,6 +49,11 @@ vision = [
 mcp = [
   "mcp[cli]>=1.2",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Smyan1909/SoMatic"
+Repository = "https://github.com/Smyan1909/SoMatic"
+"Bug Tracker" = "https://github.com/Smyan1909/SoMatic/issues"
 
 [project.scripts]
 somatic = "somatic.cli:main"

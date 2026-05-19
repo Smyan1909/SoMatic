@@ -125,7 +125,14 @@ See [docs/headless.md](docs/headless.md) for prerequisites and the full walkthro
 ## Benchmarks
 
 <!-- benchmarks-begin -->
-SoMatic is evaluated on ScreenSpot-Pro and VenusBench-GD against two baselines (raw GPT; SoMatic-as-hints-only + GPT). Full numbers, per-platform breakdowns, and methodology in [benchmarks/results/RESULTS.md](benchmarks/results/RESULTS.md). The harness lives in [`benchmarks/`](benchmarks/).
+SoMatic is evaluated on ScreenSpot-Pro and VenusBench-GD against two baselines
+(raw GPT; SoMatic-as-hints-only + GPT). Full numbers, per-platform breakdowns,
+and methodology in [benchmarks/results/RESULTS.md](benchmarks/results/RESULTS.md).
+
+| Dataset                | SoMatic+marks+GPT | SoMatic+coords+GPT | Raw GPT | Reference                                                                              |
+| ---------------------- | ----------------- | ------------------ | ------- | -------------------------------------------------------------------------------------- |
+| screenspot-pro (n=200) | 68.5%             | 73.0%              | 52.0%   | OmniParser + GPT-4o = 39.6% (paper); verify on the live leaderboard before publishing. |
+| venusbench-gd (n=171)  | 70.2%             | 78.4%              | 59.6%   | Dataset released Dec 2025; published baselines pending — see arXiv 2512.16501.         |
 <!-- benchmarks-end -->
 
 ## Licensing

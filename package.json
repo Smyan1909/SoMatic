@@ -39,6 +39,7 @@
     "scripts/",
     "src/somatic/",
     "docs/",
+    "SKILL.md",
     "pyproject.toml",
     "README.md",
     "LICENSE"

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from importlib import resources
+from pathlib import Path
 
 
 def skill_text() -> str:
     """Return the full SKILL.md operating loop shipped with the package."""
-    return (resources.files("somatic") / "SKILL.md").read_text(encoding="utf-8")
+    try:
+        return (resources.files("somatic") / "SKILL.md").read_text(encoding="utf-8")
+    except FileNotFoundError:
+        # Editable / dev install: SKILL.md lives at the repo root
+        return (Path(__file__).parent.parent.parent / "SKILL.md").read_text(encoding="utf-8")
 
 
 def skill_summary() -> str:

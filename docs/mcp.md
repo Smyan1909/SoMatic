@@ -1,24 +1,37 @@
 # SoMatic as an MCP Server
 
-SoMatic ships an MCP (Model Context Protocol) server so Claude Code, Cursor, Continue, and any other MCP-capable agent can see annotated screenshots **inline** — no separate `Read` tool call required. This is the "agent-browser-style" path; the plain CLI is the fallback.
+SoMatic ships an MCP (Model Context Protocol) server so Claude Code, Cursor, Continue, and any other MCP-capable agent can see annotated screenshots **inline** — no separate `Read` tool call required.
 
-## Install
+## Add to Claude Code
+
+### Via npm (recommended)
 
 ```sh
-pip install -e .[vision,mcp]
+claude mcp add somatic -- npx -y @somatic-cli/cli mcp serve
 ```
 
-The `[mcp]` extra pulls in the official MCP Python SDK (which includes FastMCP). The `[vision]` extra is still required because the MCP server delegates inference to the existing vision daemon.
+Or add directly to your workspace `.mcp.json`:
 
-## Wire into Claude Code
+```json
+{
+  "mcpServers": {
+    "somatic": {
+      "command": "npx",
+      "args": ["-y", "@somatic-cli/cli", "mcp", "serve"]
+    }
+  }
+}
+```
 
-CLI form:
+> **Note:** `npx` runs the Node shim, which requires Python 3.10+ on `PATH` with `somatic-cli[vision,mcp]` installed. Run `pip install 'somatic-cli[vision,mcp]'` once before using this path.
+
+### Via pip (Python-only installs)
 
 ```sh
 claude mcp add somatic -- python -m somatic.mcp_server
 ```
 
-…or add to your workspace `.mcp.json`:
+Or in `.mcp.json`:
 
 ```json
 {
@@ -31,14 +44,24 @@ claude mcp add somatic -- python -m somatic.mcp_server
 }
 ```
 
-A `somatic-mcp` console entry point is also installed, so `command: "somatic-mcp"` works equivalently.
+A `somatic-mcp` entry point is also installed, so `"command": "somatic-mcp"` works equivalently.
+
+## Load the operating loop
+
+Invoke the `skill` prompt once per session to load the full operating loop into context:
+
+```
+use the skill prompt
+```
+
+The skill content is also in [`SKILL.md`](../SKILL.md) at the repo root for easy reference.
 
 ## Operating Loop (when running under MCP)
 
 1. Load the operating-loop context — invoke the `skill` prompt once per session.
-2. `vision_init` — loads the YOLO ONNX model (first run does the `.pt → .onnx` conversion; later runs are near-instant).
+2. `vision_init` — loads the YOLO ONNX model (first run downloads weights; later runs are near-instant).
 3. `screenshot_annotated` — returns the annotated PNG inline (you see it directly) plus the marks JSON.
-4. Act by mark id with `click <id>`; when YOLO missed the target (typical for empty text inputs), use `click_near <id> dx dy`; raw `click "x,y"` is the last resort.
+4. Act by mark id with `click <id>`; when YOLO missed the target use `click_near <id> dx dy`; raw `click "x,y"` is the last resort.
 5. `vision_stop` at the end to free model memory.
 
 ## Tools
@@ -60,14 +83,14 @@ A `somatic-mcp` console entry point is also installed, so `command: "somatic-mcp
 
 | Prompt | Returns | Notes |
 |---|---|---|
-| `skill` | text | The full SoMatic operating loop (mirror of SKILL.md) |
+| `skill` | text | The full SoMatic operating loop (mirrors [`SKILL.md`](../SKILL.md)) |
 
 ## Notes & gotchas
 
-- **Daemon lifetime is independent of the MCP client.** The vision daemon runs as a separate background process (it must, because the model has to stay loaded across tool calls). Closing Claude Code does not stop it; call `vision_stop` explicitly or `taskkill` / `kill` it manually.
-- **The image arrives in the model's context.** Claude Code's UI currently renders MCP image content in a collapsed accordion rather than inline in the chat (open issue upstream). The model still sees and reasons about the image — that's the part that matters for agent workflows.
+- **Daemon lifetime is independent of the MCP client.** The vision daemon runs as a separate background process. Closing Claude Code does not stop it; call `vision_stop` explicitly or kill it manually.
+- **The image arrives in the model's context.** Claude Code's UI currently renders MCP image content in a collapsed accordion rather than inline in the chat. The model still sees and reasons about the image.
 - **Stdout is the MCP transport.** Do not run the CLI's other commands through the same Python process while the MCP server is running — anything written to stdout corrupts the protocol stream.
 
 ## Non-MCP harnesses
 
-If your agent runtime can't speak MCP, the plain CLI is the fallback. `somatic screenshot --annotate` now returns `image_b64` and `annotated_image_b64` directly in its JSON output, base64-encoded PNGs that you can feed to the model as image content in the same call. Use `--no-image` to opt out for low-bandwidth pipelines (tests, scripts).
+If your agent runtime can't speak MCP, the plain CLI is the fallback. `somatic screenshot --annotate` returns `image_b64` and `annotated_image_b64` directly in its JSON output. Use `--no-image` to opt out for low-bandwidth pipelines.

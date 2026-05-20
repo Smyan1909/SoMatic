@@ -63,7 +63,7 @@ somatic-mcp = "somatic.mcp_server:main"
 packages = ["src/somatic"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"src/somatic/SKILL.md" = "somatic/SKILL.md"
+"SKILL.md" = "somatic/SKILL.md"
 
 [tool.hatch.build.targets.sdist]
 # Source distribution is MIT-only. `tools/` is excluded so PyPI sdists never
@@ -73,6 +73,7 @@ include = [
   "src/somatic/",
   "bin/",
   "docs/",
+  "SKILL.md",
   "pyproject.toml",
   "README.md",
   "LICENSE",

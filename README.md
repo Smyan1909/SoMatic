@@ -30,7 +30,13 @@ pip install 'somatic-cli[vision,mcp]'      # add the MCP server (Claude Code, Cu
 pip install -e .[vision,mcp]
 ```
 
-See [docs/mcp.md](docs/mcp.md) for Claude Code wiring.
+To wire into Claude Code via MCP:
+
+```sh
+claude mcp add somatic -- npx -y @somatic-cli/cli mcp serve
+```
+
+See [docs/mcp.md](docs/mcp.md) for full MCP setup and the `.mcp.json` snippet.
 
 ## Quick Start
 

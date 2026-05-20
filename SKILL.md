@@ -27,15 +27,16 @@ Use SoMatic when you need to operate a native desktop UI with screenshots, mouse
 
 6. Inspect the JSON returned by the screenshot tool: `marks` contains `id`, `bbox`, `center`, and `confidence`. There are no captions — refer to elements by id and verify visually.
 
-7. Act by mark id whenever possible:
-   - `click 4`
-   - `move 7`
-   - `scroll -5 --target 2`
+7. **Click by mark id. `click <id>` automatically clicks the center of that mark's bounding box — you never need to calculate or look up any pixel coordinates.**
+   - `click 4` → clicks the center of mark 4's bbox automatically
+   - `move 7` → moves the cursor to the center of mark 7's bbox automatically
+   - `scroll -5 --target 2` → scrolls near mark 2 automatically
+   - **NEVER extract `center` or `bbox` from the JSON and pass raw pixel coordinates like `click 540,320`. That defeats the purpose of mark ids. `click <id>` does it for you.**
 
 8. When YOLO **doesn't** annotate the exact target — empty text inputs, fields that follow a labelled icon, gaps between buttons — use `click_near` with a `dx`/`dy` offset from the nearest visible mark:
-   - `click_near 12 --dx 300 --dy 0` (300 px to the right of mark 12)
+   - `click_near 12 --dx 300 --dy 0` (300 px to the right of mark 12's center, automatically)
 
-9. Use raw coordinates only as a last resort when no mark and no anchor exists:
+9. Use raw coordinates only as a last resort when **no mark and no nearby anchor exists at all**:
    - `click 640,420`
 
 10. **Re-screenshot after every consequential action.** Mark IDs are reassigned per screenshot — never apply an id from one screenshot to another screenshot's state.
@@ -48,10 +49,16 @@ Use SoMatic when you need to operate a native desktop UI with screenshots, mouse
 
 When choosing how to advance the task, ask: *what does the latest annotated screenshot show?*
 
-- **Target visible as a mark →** `click <id>`. Don't open a launcher.
-- **Target NOT visible as a mark but adjacent to one →** `click_near <id> --dx ... --dy ...`. (Common for text inputs that sit next to a `+` or send button.)
+- **Target visible as a mark →** `click <id>`. SoMatic resolves the id to the bbox center for you. Don't calculate coordinates. Don't open a launcher.
+- **Target NOT visible as a mark but adjacent to one →** `click_near <id> --dx ... --dy ...`. SoMatic resolves the anchor id to its center and applies your offset. (Common for text inputs that sit next to a `+` or send button.)
 - **Target's container visible but not the target itself →** click into the container first, re-screenshot, then act on the new marks.
 - **Target genuinely invisible →** keyboard shortcut (Win+S to search, Ctrl+L to focus URL bar, etc.). After the keypress, screenshot again before doing anything else.
+
+**Anti-patterns — never do these:**
+
+- ❌ `click 540,320` when you could use `click 4` — marks are already positioned at the right place
+- ❌ Reading `center` from the marks JSON and passing those pixels to `click` — `click <id>` does this automatically
+- ❌ Calculating coordinates by eyeballing the annotated image — `click <id>` is always more accurate
 
 ## Command Rules
 

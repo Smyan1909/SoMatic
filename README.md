@@ -6,9 +6,9 @@ Every command returns JSON. The public binary is `somatic`.
 
 ## Demo
 
-[![Watch the SoMatic demo](docs/assets/somatic-acrobat-demo.png)](docs/assets/somatic-demo.mp4)
+![SoMatic desktop automation demo](docs/assets/somatic-demo.gif)
 
-Watch the short compressed demo: [docs/assets/somatic-demo.mp4](docs/assets/somatic-demo.mp4).
+Watch the higher-quality MP4 demo: [docs/assets/somatic-demo.mp4](docs/assets/somatic-demo.mp4).
 
 SoMatic turns desktop screenshots into numbered action targets that agents can use across native apps, browsers, PDFs, and web tools:
 

@@ -40,18 +40,16 @@ def capture_raw(*, output_dir: Path | None = None, input_path: Path | None = Non
 
 
 def _scaled_font(height: int) -> ImageFont.ImageFont:
-    """Pick a font size that's actually readable on any screenshot resolution.
+    """Pick a font size readable at any resolution without occluding the UI.
 
-    `ImageFont.load_default()` (no size kwarg) returns a ~10 px bitmap font.
-    That's invisible on a 4K screenshot — about 0.5% of image height — and
-    breaks Set-of-Marks for any downstream VLM that needs to read mark ids
-    off the overlay. We target ~2% of image height, clamped to [16, 56] so
-    we don't get absurd labels on tiny test images or microscopic ones on
-    8K monitors. Pillow >= 10.1 supports `load_default(size=N)` which
-    returns a properly scaled DejaVu Sans; older Pillows fall back to the
-    bitmap font (better than nothing).
+    Targets ~1.3% of image height, clamped to [12, 20] px:
+      1080p → 14 px, 1440p → 14 px, 4K → 20 px.
+    This keeps labels compact on normal desktop screenshots while remaining
+    legible for VLMs processing high-res images. Pillow >= 10.1 supports
+    `load_default(size=N)` (DejaVu Sans); older Pillows fall back to the
+    ~10 px bitmap font.
     """
-    size = max(16, min(56, height // 50 * 2))
+    size = max(12, min(20, height // 100))
     try:
         return ImageFont.load_default(size=size)
     except TypeError:  # pragma: no cover - Pillow < 10.1

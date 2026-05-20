@@ -4,6 +4,18 @@ SoMatic is an agent-first CLI for native desktop UI automation. It runs a local 
 
 Every command returns JSON. The public binary is `somatic`.
 
+## Demo
+
+[![Watch the SoMatic demo](docs/assets/somatic-acrobat-demo.png)](docs/assets/somatic-demo.mp4)
+
+Watch the short compressed demo: [docs/assets/somatic-demo.mp4](docs/assets/somatic-demo.mp4).
+
+SoMatic turns desktop screenshots into numbered action targets that agents can use across native apps, browsers, PDFs, and web tools:
+
+| PDF workflow | Chess setup | Browser + terminal |
+| ------------ | ----------- | ------------------ |
+| ![Annotated Acrobat PDF workflow](docs/assets/somatic-acrobat-demo.png) | ![Annotated Chess.com setup board](docs/assets/somatic-chess-demo.png) | ![Annotated browser and terminal workflow](docs/assets/somatic-finance-demo.png) |
+
 ## Install
 
 ```sh

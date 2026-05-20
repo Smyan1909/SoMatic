@@ -6,7 +6,7 @@ Use SoMatic when you need to operate a native desktop UI with screenshots, mouse
 
 **MCP path:** annotated screenshots arrive **inline** as image content in the tool response — you see the image directly, no extra step needed.
 
-**CLI path:** `somatic screenshot --annotate --no-image` writes the annotated PNG to disk and returns its path in `screenshot.annotated_path`. Use the `Read` tool on that path to see the image. Do **not** try to parse the JSON output as an image — the bash tool returns text only.
+**CLI path:** `somatic screenshot --annotate` writes the annotated PNG to disk and returns its path in `screenshot.annotated_path`. Use the `Read` tool on that path to see the image. The JSON output is text only — use `Read` to get the actual image.
 
 ## Operating Loop
 
@@ -14,7 +14,7 @@ Use SoMatic when you need to operate a native desktop UI with screenshots, mouse
 
 2. **Always begin a task by taking an annotated screenshot and visually inspecting it.**
    - MCP: call `screenshot_annotated` — the image arrives inline.
-   - CLI: run `somatic screenshot --annotate --no-image`, then `Read` the path at `screenshot.annotated_path`.
+   - CLI: run `somatic screenshot --annotate`, then `Read` the path at `screenshot.annotated_path`.
 
 3. **Scan the image before acting.** Check every region — taskbar, dock, desktop icons, system tray, open windows — and identify which numbered mark corresponds to the element you want.
 
@@ -68,7 +68,7 @@ CLI form:
 somatic doctor
 somatic vision init
 somatic vision status
-somatic screenshot --annotate --no-image   # returns annotated_path; use Read to view
+somatic screenshot --annotate              # returns annotated_path; use Read to view
 somatic click <id>
 somatic click <x,y>
 somatic click-near <id> --dx 100 --dy 0

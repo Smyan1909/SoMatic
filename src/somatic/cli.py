@@ -22,7 +22,7 @@ def build_parser() -> argparse.ArgumentParser:
     shot.add_argument("--session", default="default")
     shot.add_argument("--marks-out", type=Path)
     shot.add_argument("--vision-url", default=None)
-    shot.add_argument("--no-image", action="store_true", help="Omit base64 PNG bytes from the JSON response (smaller output).")
+    shot.add_argument("--image", action="store_true", help="Include base64 PNG bytes in the JSON response (for programmatic pipelines).")
 
     click = sub.add_parser("click", help="Click a mark id or x,y coordinate.")
     click.add_argument("target")
@@ -269,7 +269,7 @@ def screenshot_command(args: argparse.Namespace) -> dict[str, object]:
         session=args.session,
         marks_out=args.marks_out,
         vision_url=args.vision_url,
-        include_image_bytes=not args.no_image,
+        include_image_bytes=args.image,
     )
 
 

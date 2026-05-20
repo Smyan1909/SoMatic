@@ -80,14 +80,12 @@ def test_skill_command_returns_text(capsys):
     assert "click_near" in payload["text"] or "click-near" in payload["text"]
 
 
-def test_screenshot_no_image_flag_omits_b64(capsys, tmp_path):
-    # Provide an input file so we don't actually capture the desktop; this
-    # exercises the screenshot pipeline with --no-image opted in.
+def test_screenshot_omits_b64_by_default(capsys, tmp_path):
     from PIL import Image
     src = tmp_path / "in.png"
     Image.new("RGB", (32, 24), (255, 255, 255)).save(src)
 
-    exit_code = main(["screenshot", "--input", str(src), "--output-dir", str(tmp_path), "--no-image"])
+    exit_code = main(["screenshot", "--input", str(src), "--output-dir", str(tmp_path)])
     payload = json.loads(capsys.readouterr().out)
 
     assert exit_code == 0
@@ -96,12 +94,12 @@ def test_screenshot_no_image_flag_omits_b64(capsys, tmp_path):
     assert "annotated_image_b64" not in payload
 
 
-def test_screenshot_includes_b64_by_default(capsys, tmp_path):
+def test_screenshot_image_flag_includes_b64(capsys, tmp_path):
     from PIL import Image
     src = tmp_path / "in.png"
     Image.new("RGB", (32, 24), (255, 255, 255)).save(src)
 
-    exit_code = main(["screenshot", "--input", str(src), "--output-dir", str(tmp_path)])
+    exit_code = main(["screenshot", "--input", str(src), "--output-dir", str(tmp_path), "--image"])
     payload = json.loads(capsys.readouterr().out)
 
     assert exit_code == 0

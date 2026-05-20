@@ -1,6 +1,6 @@
 {
   "name": "@somatic-cli/cli",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Agent-first CLI for native UI automation with Set-of-Marks screenshots.",
   "license": "MIT",
   "author": "SoMatic contributors",

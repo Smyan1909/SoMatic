@@ -30,10 +30,18 @@ pip install 'somatic-cli[vision,mcp]'      # add the MCP server (Claude Code, Cu
 pip install -e .[vision,mcp]
 ```
 
-To wire into Claude Code via MCP:
+To add the SoMatic skill to Claude Code, Cursor, Copilot, and 30+ other agents:
 
 ```sh
-claude mcp add somatic -- npx -y @somatic-cli/cli mcp serve
+npx skills add Smyan1909/SoMatic
+```
+
+This installs [`skills/somatic/SKILL.md`](skills/somatic/SKILL.md) into your agent's skills directory. The agent will then know the full operating loop without any further prompting.
+
+To wire in the MCP server (inline annotated screenshots):
+
+```sh
+claude mcp add somatic -- npx @somatic-cli/cli mcp serve
 ```
 
 See [docs/mcp.md](docs/mcp.md) for full MCP setup and the `.mcp.json` snippet.

@@ -1,6 +1,6 @@
 {
   "name": "@somatic-cli/cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Agent-first CLI for native UI automation with Set-of-Marks screenshots.",
   "license": "MIT",
   "author": "SoMatic contributors",
@@ -38,12 +38,18 @@
     "bin/",
     "scripts/",
     "src/somatic/",
+    "skills/",
     "docs/",
     "SKILL.md",
     "pyproject.toml",
     "README.md",
     "LICENSE"
   ],
+  "agents": {
+    "skills": [
+      { "name": "somatic", "path": "./skills/somatic" }
+    ]
+  },
   "engines": {
     "node": ">=18"
   },

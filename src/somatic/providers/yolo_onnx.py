@@ -27,7 +27,7 @@ from PIL import Image
 from ..jsonio import fail
 from ..paths import onnx_weights_path, onnx_weights_source_file
 
-HF_ONNX_REPO_ID = os.environ.get("SOMATIC_YOLO_ONNX_REPO", "")
+HF_ONNX_REPO_ID = os.environ.get("SOMATIC_YOLO_ONNX_REPO", "Smyan-Sondur/somatic-icon-detect")
 HF_ONNX_FILENAME = os.environ.get("SOMATIC_YOLO_ONNX_FILENAME", "icon-detect.onnx")
 
 INPUT_SIZE = int(os.environ.get("SOMATIC_YOLO_INPUT_SIZE", "640"))

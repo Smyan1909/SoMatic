@@ -7,7 +7,7 @@ Everything in this directory uses or produces code/data covered by the **GNU Aff
 1. **Maintainers** who publish a new pre-converted ONNX to the SoMatic Hugging Face repo on every release.
 2. **End users** who want to produce their own ONNX from the upstream OmniParser checkpoint and accept the resulting AGPL obligations on the output file.
 
-If you don't need either of those, you can ignore this entire directory. The SoMatic install pipeline (`pip install -e .[vision]` or `npm install -g @somatic/cli`) never touches `tools/`.
+If you don't need either of those, you can ignore this entire directory. The SoMatic install pipeline (`pip install -e .[vision]` or `npm install -g @somatic-cli/cli`) never touches `tools/`.
 
 ## Why this directory exists
 

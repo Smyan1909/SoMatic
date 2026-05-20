@@ -1,5 +1,5 @@
 {
-  "name": "@somatic/cli",
+  "name": "@somatic-cli/cli",
   "version": "0.1.0",
   "description": "Agent-first CLI for native UI automation with Set-of-Marks screenshots.",
   "license": "MIT",

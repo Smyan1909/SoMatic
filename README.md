@@ -7,7 +7,7 @@ Every command returns JSON. The public binary is `somatic`.
 ## Install
 
 ```sh
-npm install -g @somatic/cli
+npm install -g @somatic-cli/cli
 ```
 
 The npm package launches the Python core. Python 3.10+ must be available on `PATH`.
@@ -150,4 +150,4 @@ SoMatic follows the **FFmpeg licensing strategy**: a strictly MIT-licensed core,
 - **YOLO ONNX weights** — AGPL-3.0. Derived from `microsoft/OmniParser-v2.0`'s upstream YOLO checkpoint. SoMatic does not bundle the weights; `somatic vision init` downloads them at runtime from a separately-licensed Hugging Face repository. Run `somatic license` for the full notice.
 - **`tools/`** — AGPL-3.0. The `convert_yolo_to_onnx.py` script imports `ultralytics` (AGPL-3.0) and produces an AGPL-3.0 ONNX file. This directory is excluded from both the npm tarball and the PyPI sdist/wheel. See [`tools/README.md`](tools/README.md).
 
-Practically: if you `pip install somatic-cli` or `npm install -g @somatic/cli`, your install is MIT. The moment you run `somatic vision init` you accept the AGPL-3.0 obligations on the downloaded weights. If you run anything from `tools/`, your derivative ONNX is also AGPL-3.0.
+Practically: if you `pip install somatic-cli` or `npm install -g @somatic-cli/cli`, your install is MIT. The moment you run `somatic vision init` you accept the AGPL-3.0 obligations on the downloaded weights. If you run anything from `tools/`, your derivative ONNX is also AGPL-3.0.

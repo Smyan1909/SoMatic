@@ -1,6 +1,6 @@
 # Release Checklist
 
-Alpha release checklist for `@somatic/cli`.
+Alpha release checklist for `@somatic-cli/cli`.
 
 ## 1. Tests
 

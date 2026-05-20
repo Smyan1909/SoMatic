@@ -72,7 +72,7 @@ tests/                  Including test_license_boundary.py which CI-enforces the
 
 The repo follows the FFmpeg licensing strategy:
 
-- The published artifacts (`npm install -g @somatic/cli` and PyPI wheel/sdist) are pure MIT.
+- The published artifacts (`npm install -g @somatic-cli/cli` and PyPI wheel/sdist) are pure MIT.
 - The model weights are AGPL-3.0 (inherited from upstream YOLO). They are downloaded at runtime from a separately-licensed Hugging Face repository via `somatic vision init`; SoMatic never bundles them.
 - The conversion tool that converts the upstream `.pt` to `.onnx` lives under `tools/`. It imports `ultralytics` (AGPL-3.0) and produces AGPL-3.0 outputs. `tools/` is excluded from both npm and PyPI by `package.json`'s `files` allowlist, `.npmignore`, and `pyproject.toml`'s sdist exclude list.
 - `tests/test_license_boundary.py` runs in CI on every commit and fails the build if any module under `src/somatic/` either statically imports `ultralytics` or transitively pulls it into `sys.modules`.
